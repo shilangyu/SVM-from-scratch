@@ -10,7 +10,7 @@ The prediction function will be denoted by $p: \mathbb R^d \to \{-1, 1\}$. The o
 
 SVM's goal is to construct a prediction function which will represent a hyperplane that can be used to divide the space into two parts. One SVM model is considered to be better than a different SVM model for the same dataset if the margin (distance) between the hyperplane and the nearest data point is maximized. The nearest data point to the hyperplane is called the _support vector_. Therefore we have a clear metric to optimize.
 
-<!-- ![A dataset with black and white dots representing two different labels. Three hyperplanes divide the dataset in different ways.](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Svm_separating_hyperplanes_%28SVG%29.svg/1920px-Svm_separating_hyperplanes_%28SVG%29.svg.png) -->
+![A dataset with black and white dots representing two different labels. Three hyperplanes divide the dataset in different ways.](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Svm_separating_hyperplanes_%28SVG%29.svg/1920px-Svm_separating_hyperplanes_%28SVG%29.svg.png)
 
 Recall the general equation of a hyperplane: $w \cdot x - b = 0$ where $w \in \mathbb R^d$ denotes a normal vector to the hyperplane and $b \in \mathbb R$ is the offset ($\frac{b}{||w||}$ determines the offset from the origin along the normal vector $w$). Since our goal is the find the optimal hyperplane, we end up with $d+1$ trainable parameters ($|w| + 1$). Once the hyperplane is found we can construct two additional parallel hyperplanes which reside at the support vectors of the two classes, $w \cdot x - b = -1$ and $w \cdot x - b = 1$. Then, all points from the dataset adhere to the following
 
@@ -21,17 +21,17 @@ y_i = \begin{cases}
 \end{cases} \implies y_i(w \cdot x - b) \ge 1
 $$
 
-<!-- ![A dataset separated by a hyperplane normalized around the support vectors.](https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/SVM_margin.png/1920px-SVM_margin.png) -->
+![A dataset separated by a hyperplane normalized around the support vectors.](https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/SVM_margin.png/1920px-SVM_margin.png)
 
 Since $\frac{1}{||w||}$ is the margin and we want to maximize it, the problem can be restated as a minimization problem of $||w||$. Our predictor can be neatly expressed as $p(x) = \text{sign}(w \cdot x - b)$ with an edge case of when $x$ lies perfectly on the hyperplane. This is called a _hard-margin SVM_ since it works only for perfect datasets which do not have outliers.
 
-Now that we have the model we need to introduce a way to train it. There are many techniques to do so. Here we will focus on one which uses gradient descent. Firstly, we need some function we want to optimize. We will use the hinge function which will suit our needs well: $H(x_i, y_i) = \max(0, 1 - y_i(w \cdot x_i - b))$. Notice, that when the guess is correct, then $y_i(w \cdot x_i - b) \ge 1$ as shown before, thus $H = 0$. If the guess is incorrect, $H \ge 0$. So if for every data point $H = 0$ then we have found a hyperplane the space correctly. Finally, we can define a loss function over the whole dataset which we will want to minimize:
+Now that we have the model we need to introduce a way to train it. There are many techniques to do so. Here we will focus on one which uses gradient descent. Firstly, we need some function we want to optimize. We will use the hinge function which will suit our needs well: $H(x_i, y_i) = \max(0, 1 - y_i(w \cdot x_i - b))$. Notice, that when the guess is correct, then $y_i(w \cdot x_i - b) \ge 1$ as shown before, thus $H = 0$. If the guess is incorrect, $H \ge 0$. So if for every data point $H = 0$ then we have found a hyperplane the space correctly. Hinge loss introduces a _soft-margin_ since it allows for misclassification with a quantifiable result. We also have to incorporate the minimization of $||w||$ as previously stated. Finally, we can define a loss function over the whole dataset which we will want to minimize:
 
 $$
-\ell(w, b) = \frac{1}{n}\sum_{i=1}^n H(x_i, y_i) = \frac{1}{n}\sum_{i=1}^n \max(0, 1 - y_i(w \cdot x_i - b))
+\ell(w, b) = \lambda ||w||^2 +  \frac{1}{n}\sum_{i=1}^n H(x_i, y_i) = \lambda w^Tw + \frac{1}{n}\sum_{i=1}^n \max(0, 1 - y_i(w \cdot x_i - b))
 $$
 
-To perform gradient descent we will need to compute the partial derivatives with respect to the trainable parameters ($w$ and $b$). Let's start by considering the hinge loss function which can be split into two cases: when we reach the left and right case of the $\max$ function.
+Here $\lambda > 0$ is the constant regularization parameter controlling the trade-off between correct predictions and large margins. To perform gradient descent we will need to compute the partial derivatives with respect to the trainable parameters ($w$ and $b$). Let's start by considering the hinge loss function which can be split into two cases: when we reach the left and right case of the $\max$ function.
 
 $$
 H(x_i, y_i) = \begin{cases}
@@ -40,34 +40,41 @@ H(x_i, y_i) = \begin{cases}
 \end{cases}
 $$
 
-Which yields the following derivatives (recall that $w$ is a vector)
+Which yields the following derivatives for a particular data point (recall that $w$ is a vector):
 
 $$
-\frac{\partial H_i}{\partial w} = \begin{cases}
-	0 & \text{if } y_i(w \cdot x_i - b) \ge 1 \\
-	-y_i x_i & \text{otherwise} \\
+\frac{\partial \ell_i}{\partial w} = \begin{cases}
+	2\lambda w & \text{if } y_i(w \cdot x_i - b) \ge 1 \\
+	2\lambda w - y_i x_i & \text{otherwise} \\
 \end{cases}
 $$
 
 $$
-\frac{\partial H_i}{\partial b} = \begin{cases}
+\frac{\partial \ell_i}{\partial b} = \begin{cases}
 	0 & \text{if } y_i(w \cdot x_i - b) \ge 1 \\
 	y_i & \text{otherwise} \\
 \end{cases}
 $$
 
-For each training example from our dataset we can now first check the $y_i(w \cdot x_i - b) \ge 1$ condition. If this condition is not satisfied we can perform gradient descent with the gradient specified above. Since the gradient points to the steepest ascent and our task is to minimize the function, we will subtract the gradient instead of adding it. Our parameters will now converge iteratively, where $k$ is the iteration number:
+For each training example from our dataset we can now first check the $y_i(w \cdot x_i - b) \ge 1$ condition. We can perform gradient descent with the gradient specified above and conditionally apply a different gradient based on the condition. Since the gradient points to the steepest ascent and our task is to minimize the function, we will subtract the gradient instead of adding it. Our parameters will now converge iteratively, where $k$ is the iteration number:
 
 $$
-\begin{matrix}
-	w_{k+1} =& w_k - (-y_i x_i) = w_k - y_i x_i \\
-	b_{k+1} =& b_k - y_i \\
-\end{matrix}
+w_{k+1} = \begin{cases}
+	w_k - 2\lambda w &\text{if } y_i(w \cdot x_i - b) \ge 1 \\
+	w_k - (2\lambda w - y_i x_i) = w_k - 2\lambda w + y_i x_i &\text{otherwise} \\
+\end{cases} \\
+$$
+
+$$
+b_{k+1} = \begin{cases}
+	b_k &\text{if } y_i(w \cdot x_i - b) \ge 1 \\
+	b_k - y_i &\text{otherwise} \\
+\end{cases} \\
 $$
 
 If the condition is satisfied then the gradient is zero, so no adjustments have to be done.
 
-> See [linear_hard_margin_svm.jl](linear_hard_margin_svm.jl) for a practical implementation of the so far introduced concepts
+> See [linear_soft_margin_svm.jl](linear_soft_margin_svm.jl) for a practical implementation of the so far introduced concepts
 
 ## Problem 1: what if the dataset isn't perfect?
 

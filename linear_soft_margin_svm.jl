@@ -4,11 +4,11 @@ using Plots
 
 
 # to have a reproducible example
-seed!(123)
+seed!(0)
 
 # sample 100 data points from multivariate normal distributions with a visible separation between them
-points1 = rand(MvNormal([5, 8], [1 3/5; 3/5 2]), 10)
-points2 = rand(MvNormal([8, 5], [1 3/5; 3/5 2]), 10)
+points1 = rand(MvNormal([5, 8], 3 .* [1 3/5; 3/5 2]), 20)
+points2 = rand(MvNormal([8, 5], 3 .* [1 3/5; 3/5 2]), 20)
 
 # visualize the dataset
 plt = scatter(points1[1, :], points1[2, :], label="y = 1")
@@ -43,19 +43,23 @@ end
 draw()
 readline()
 
-# loss function
-loss() = sum([max(0, 1 - y * hyperplane(x)) for (x, y) in D]) / length(D)
+# loss function and the regularization parameter
+λ = 3 / 100
+loss() = λ * w' * w + sum([max(0, 1 - y * hyperplane(x)) for (x, y) in D]) / length(D)
 
 # train the model on the dataset. α represents the learning rate
 function fit(α=0.003)
   for (x, y) in D
     is_correct = y * hyperplane(x) >= 1
 
-    # if the prediction was correct we do not have to adjust w and b
-    if !is_correct
+    # different gradients have to be applied based on the condition
+    if is_correct
       # adjust according to the gradients scaled by the learning rate
       # gradients point to the steepest ascent, but we want to minimize the loss function, so we subtract the gradient
-      global w -= α * (-y * x)
+      global w -= α * 2λ * w
+      global b -= α * 0
+    else
+      global w -= α * (2λ * w .- y * x)
       global b -= α * y
     end
   end
