@@ -56,6 +56,17 @@ $$
 \end{cases}
 $$
 
+For each training example from our dataset we can now first check the $y_i(w \cdot x_i - b) \ge 1$ condition. If this condition is not satisfied we can perform gradient descent with the gradient specified above. Since the gradient points to the steepest ascent and our task is to minimize the function, we will subtract the gradient instead of adding it. Our parameters will now converge iteratively, where $k$ is the iteration number:
+
+$$
+\begin{matrix}
+	w_{k+1} =& w_k - (-y_i x_i) = w_k - y_i x_i \\
+	b_{k+1} =& b_k - y_i \\
+\end{matrix}
+$$
+
+If the condition is satisfied then the gradient is zero, so no adjustments have to be done.
+
 > See [linear_hard_margin_svm.jl](linear_hard_margin_svm.jl) for a practical implementation of the so far introduced concepts
 
 ## Problem 1: what if the dataset isn't perfect?
