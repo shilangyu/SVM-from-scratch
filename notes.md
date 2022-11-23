@@ -1,3 +1,7 @@
+---
+linkcolor: cyan
+---
+
 # Support Vector Machines (SVM)
 
 > Disclaimer: this does not aim to fully cover the possibilities of SVM models. It merely describes the basic concepts related to them. Some details are skipped on purpose with the intention of keeping it short.
@@ -10,7 +14,7 @@ The prediction function will be denoted by $p: \mathbb R^d \to \{-1, 1\}$. The o
 
 SVM's goal is to construct a prediction function which will represent a hyperplane that can be used to divide the space into two parts. One SVM model is considered to be better than a different SVM model for the same dataset if the margin (distance) between the hyperplane and the nearest data point is maximized. The nearest data point to the hyperplane is called the _support vector_. Therefore we have a clear metric to optimize.
 
-![A dataset with black and white dots representing two different labels. Three hyperplanes divide the dataset in different ways.](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Svm_separating_hyperplanes_%28SVG%29.svg/1920px-Svm_separating_hyperplanes_%28SVG%29.svg.png)
+![A dataset with black and white dots representing two different labels. Three hyperplanes divide the dataset in different ways.](<https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Svm_separating_hyperplanes_(SVG).svg/1920px-Svm_separating_hyperplanes_(SVG).svg.png>)
 
 Recall the general equation of a hyperplane: $w \cdot x - b = 0$ where $w \in \mathbb R^d$ denotes a normal vector to the hyperplane and $b \in \mathbb R$ is the offset ($\frac{b}{||w||}$ determines the offset from the origin along the normal vector $w$). Since our goal is the find the optimal hyperplane, we end up with $d+1$ trainable parameters ($|w| + 1$). Once the hyperplane is found we can construct two additional parallel hyperplanes which reside at the support vectors of the two classes, $w \cdot x - b = -1$ and $w \cdot x - b = 1$. Then, all points from the dataset adhere to the following
 
@@ -91,6 +95,6 @@ In the case of _one-versus-all_ the prediction function has to be reformulated u
 
 ## References
 
-1. All images taken from the well-written Wikipedia article on SVMs <https://en.wikipedia.org/wiki/Support_vector_machine>
+1. All images taken from the well-written Wikipedia article on SVMs [https://en.wikipedia.org/wiki/Support_vector_machine](https://en.wikipedia.org/wiki/Support_vector_machine)
 2. **V. Vapnik**, _Statistical Learning Theory_ (1998)
 3. **O. Chapelle**, _Training a Support Vector Machine in the Primal_ (2007)
