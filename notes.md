@@ -31,7 +31,7 @@ $$
 \ell(w, b) = \lambda ||w||^2 +  \frac{1}{n}\sum_{i=1}^n H(x_i, y_i) = \lambda w^Tw + \frac{1}{n}\sum_{i=1}^n \max(0, 1 - y_i(w \cdot x_i - b))
 $$
 
-Here $\lambda > 0$ is the constant regularization parameter controlling the trade-off between correct predictions and large margins. To perform gradient descent we will need to compute the partial derivatives with respect to the trainable parameters ($w$ and $b$). Let's start by considering the hinge loss function which can be split into two cases: when we reach the left and right case of the $\max$ function.
+Here $\lambda > 0$ is the regularization hyperparameter controlling the trade-off between correct predictions and large margins. To perform gradient descent we will need to compute the partial derivatives with respect to the trainable parameters ($w$ and $b$). Let's start by considering the hinge loss function which can be split into two cases: when we reach the left and right case of the $\max$ function.
 
 $$
 H(x_i, y_i) = \begin{cases}
@@ -78,16 +78,19 @@ If the condition is satisfied then the gradient is zero, so no adjustments have 
 
 ## Problem 1: what if the dataset isn't perfect?
 
-TODO
+## What if the problem isn't binary?
 
-## Problem 2: what if the problem is not linearly separable?
+If the amount of classes is larger than 2, we can construct multiple SVM and treat them as a single larger SVM. There are many popular techniques for that, but here two most popular approaches will be mentioned. Let there be $m$ classes.
 
-TODO
+1. _one-versus-all_: we construct $m$ SVMs trained to treat the dataset as having two classes: one for the target class, and the other for all other $m-1$ classes. To then perform predictions, we can run the new $x_{i+1}$ point through all $m$ SVMs and see which one is the most certain about its prediction. Note, that the definition of the prediction function had a co-domain of $\{-1, 0, 1\}$ so it is not possible to decide which SVM is the most certain. Therefore the prediction function has to be altered to produce quantifiable scores.
+2. _one-versus-one_: we construct $\binom{m}{2}$ SVMs for every combination of pairs of classes. Then to perform predictions, we run all SVMs and collect votes. The class with most votes wins.
 
-## Problem 3: what if the problem isn't binary?
+In the case of _one-versus-all_ the prediction function has to be reformulated unlike in the _one-versus-one_ case. However, _one-versus-one_ comes with a $\binom{m}{2} = \mathcal O(m^2)$ quadratic amount of SVMs unlike the $m = \mathcal O(m)$ linear one for _one-versus-all_. Thus the _one-versus-one_ approach will scale horribly for larger values of $m$.
 
-TODO
+> See [multiclass_svm.jl](multiclass_svm.jl) for a practical implementation of a multiclass SVM using the _one-versus-all_ approach.
 
 ## References
 
 1. All images taken from the well-written Wikipedia article on SVMs <https://en.wikipedia.org/wiki/Support_vector_machine>
+2. **V. Vapnik**, _Statistical Learning Theory_ (1998)
+3. **O. Chapelle**, _Training a Support Vector Machine in the Primal_ (2007)
