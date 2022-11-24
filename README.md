@@ -1,7 +1,3 @@
 # SVM from scratch in Julia
 
-> Done as a mini-presentation for the Topological Data Analysis course at the MiNI faculty
-
-My notes for the presentation can be found in [notes.md](notes.md). They contain explanation of how SVMs work and derivations of needed equations.
-
-Implementation of various SVM variations can be found in Julia files.
+Repo including explanation and high-level derivation of the SVM method used for classification, see [notes.md](notes.md). Additionally implementations of 3 different SVMs models can be found in Julia files.
