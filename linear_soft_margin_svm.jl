@@ -6,7 +6,7 @@ using Plots
 # to have a reproducible example
 seed!(0)
 
-# sample 100 data points from multivariate normal distributions with a visible separation between them
+# sample 40 data points from multivariate normal distributions with a visible separation between them
 points1 = rand(MvNormal([5, 8], 3 .* [1 3/5; 3/5 2]), 20)
 points2 = rand(MvNormal([8, 5], 3 .* [1 3/5; 3/5 2]), 20)
 

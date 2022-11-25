@@ -1,5 +1,6 @@
 ---
 linkcolor: cyan
+geometry: margin=3.5cm
 ---
 
 # Support Vector Machines (SVM)
@@ -70,14 +71,14 @@ For each training example from our dataset we can now first check the $y_i(w \cd
 
 $$
 w_{k+1} = \begin{cases}
-	w_k - 2\lambda w &\text{if } y_i(w \cdot x_i - b) \ge 1 \\
-	w_k - (2\lambda w - y_i x_i) = w_k - 2\lambda w + y_i x_i &\text{otherwise} \\
+	w_k - 2\lambda w_k &\text{if } y_i(w_k \cdot x_i - b) \ge 1 \\
+	w_k - (2\lambda w_k - y_i x_i) = w_k - 2\lambda w_k + y_i x_i &\text{otherwise} \\
 \end{cases} \\
 $$
 
 $$
 b_{k+1} = \begin{cases}
-	b_k &\text{if } y_i(w \cdot x_i - b) \ge 1 \\
+	b_k &\text{if } y_i(w \cdot x_i - b_k) \ge 1 \\
 	b_k - y_i &\text{otherwise} \\
 \end{cases} \\
 $$
@@ -118,7 +119,7 @@ Which yields the dual which has to be minimized as
 
 $$
 \begin{aligned}
-	\mathcal L_2(\alpha) &= \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n y_i \alpha_i k(x_i, x_j) y_j \alpha_j - \sum_{i=1}^n \alpha_i \\
+	\mathcal L_2(\alpha) &= \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n y_i \alpha_i \varphi(x_i) \cdot \varphi(x_j) y_j \alpha_j - \sum_{i=1}^n \alpha_i \\
 	 &= \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n y_i \alpha_i k(x_i, x_j) y_j \alpha_j - \sum_{i=1}^n \alpha_i \\
 \end{aligned}
 $$
