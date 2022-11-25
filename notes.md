@@ -33,7 +33,7 @@ Now that we have the model we need to introduce a way to train it. There are man
 
 $$
 \begin{aligned}
-	\ell(w, b) &= \lambda ||w||^2 +  \frac{1}{n}\sum_{i=1}^n H(x_i, y_i) \\
+	\ell(w, b) &= \lambda ||w||^2 + \frac{1}{n}\sum_{i=1}^n H(x_i, y_i) \\
 	 					 &= \lambda w \cdot w + \frac{1}{n}\sum_{i=1}^n \max(0, 1 - y_i(w \cdot x_i - b))
 \end{aligned}
 $$
@@ -55,11 +55,11 @@ $$
 	\\
 	\frac{\partial \ell}{\partial b} \\
 \end{bmatrix} = \begin{bmatrix}
-	2\lambda w + \sum_{i = 0}^n \begin{cases}
+	2\lambda w + \frac{1}{n}\sum_{i = 0}^n \begin{cases}
 		0 & \text{if } y_i(w \cdot x_i - b) \ge 1 \\
 		-y_i x_i & \text{otherwise} \\
 	\end{cases} \\
-	\sum_{i = 0}^n \begin{cases}
+	\frac{1}{n}\sum_{i = 0}^n \begin{cases}
 		0 & \text{if } y_i(w \cdot x_i - b) \ge 1 \\
 		y_i & \text{otherwise} \\
 	\end{cases} \\
@@ -82,11 +82,79 @@ b_{k+1} = \begin{cases}
 \end{cases} \\
 $$
 
-If the condition is satisfied then the gradient is zero, so no adjustments have to be done.
-
 > See [linear_soft_margin_svm.jl](linear_soft_margin_svm.jl) for a practical implementation of the so far introduced concepts
 
-## Problem 1: what if the dataset isn't perfect?
+## What if the problem is not linearly separable?
+
+So far we have been generating hyperplanes which intrinsically suffer from being able to classify only linearly separable datasets. For instance, the XOR function is not linearly separable. To solve non-linear problems one has to introduce non-linearity to the model, similarly to how neural networks use non-linear activation functions. One such way would be to introduce extra dimensions where the dataset can be divided by a hyperplane. If $\mathbb R^d$ is the space of the data points, we want to find such a mapping, called feature map, $\varphi: \mathbb R^d \to \mathbb R^r$ for some $r \in \mathbb N$ (preferably $d < r$ since we want to increase the dimensionality) together with a _kernel function_ $k: \mathbb R^d \times \mathbb R^d \to \mathbb R$
+
+$$
+	k(x, y) = \langle \varphi(x), \varphi(y) \rangle
+$$
+
+Since we are operating in the euclidean space with the dot product as the inner product space, we can rewrite $k$ as $k(x,y) = \varphi(x) \cdot \varphi(y)$. Direct computation of $\varphi$ is not needed, we will only need to find the kernel function. This kernel function will replace dot products used throughout the SVM method.
+
+![A non-linearly separable dataset mapped to a higher dimensional space where a decision boundary can be found with a simple hyperplane using $\varphi(X) = (x_1, x_2, x_1^2 + x_2^2)$.](https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Kernel_trick_idea.svg/440px-Kernel_trick_idea.svg.png)
+
+Note that if we set $\varphi = \text{id}$ then $k(x, y) = \langle \varphi(x), \varphi(y) \rangle = \langle x, y \rangle = x \cdot y$, which gives us the SVM for linearly separable problems. Now, this problem can be expressed as a primal one and proceed with gradient descent as we did for the linear case. However, for some not precisely known reason the literature about SVMs has converged towards solving it as a Lagrangian dual and, as O. Chapelle (2007) argues, the primal one can provide many advantages. In both the primal and dual problem formulation $\varphi$ is never directly computed, it is always used indirectly through the kernel function. So, to not diverge from literature I will present the dual problem which requires Quadratic Optimization instead of gradient descent.
+
+To start we introduce the Lagrange primal which we want to minimize on $w$ and $b$
+
+$$
+\mathcal L_1(w, b, \alpha) = \lambda\frac{1}{2}||w||^2 - \sum_{i=1}^n \alpha_i (y_i(w^T\varphi(x_i) - b) - 1)
+$$
+
+subject to $\alpha_i \ge 0$. This is not enough since we want to get rid of the $\varphi$. Thus we attempt to minimize on $w$ and $b$ to derive the dual:
+
+$$
+	\frac{\partial \mathcal L_1}{\partial w} = 0 = \lambda w - \sum_{i=1}^n \alpha_i y_i \varphi(x_i) \implies w = \sum_{i=1}^n \alpha_i y_i \varphi(x_i)
+$$
+
+$$
+	\frac{\partial \mathcal L_1}{\partial b} = 0 = -\sum_{i=1}^n \alpha_i y_i \implies \sum_{i=1}^n \alpha_i y_i = 0
+$$
+
+Which yields the dual which has to be minimized as
+
+$$
+\begin{aligned}
+	\mathcal L_2(\alpha) &= \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n y_i \alpha_i k(x_i, x_j) y_j \alpha_j - \sum_{i=1}^n \alpha_i \\
+	 &= \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n y_i \alpha_i k(x_i, x_j) y_j \alpha_j - \sum_{i=1}^n \alpha_i \\
+\end{aligned}
+$$
+
+Subject to $\sum_{i=1}^n \alpha_i y_i = 0$ and $0 \le \alpha_i \le \lambda^{-1}$. To solve this one has to use quadratic optimization which is well beyond the scope of this document. A popular approach is the SMO algorithm (J. Platt 1998).
+
+In the new space $w$ can be expressed as the following linear combination, for $c$ support vectors (ie. those with $\alpha_i > 0$):
+
+$$
+	w = \sum_{i=1}^c \alpha_i y_i \varphi(x_i)
+$$
+
+And $b$ can be computed from the support vectors as well:
+
+$$
+	b = \sum_{i=1}^c \alpha_i y_i \varphi(x_i) - y_i
+$$
+
+Then we can return to our predictor function
+
+$$
+\begin{aligned}
+	p(x) &= \text{sign}(w \cdot \varphi(x) - b) \\
+			 &= \text{sign}(\sum_{i=1}^c \alpha_i y_i \varphi(x_i) \cdot \varphi(x) - b) \\
+			 &= \text{sign}(\sum_{i=1}^c \alpha_i y_i \langle \varphi(x_i), \varphi(x) \rangle - b) \\
+			 &= \text{sign}(\sum_{i=1}^c \alpha_i y_i k(x_i, x) - b) \\
+\end{aligned}
+$$
+
+Many kernel function exist and can be used for different use cases. A common choice for a kernel function is the basis radial function, it has a single hyperparameter $\gamma > 0$:
+
+$$
+	\text{rbf}(x, y) = \exp(-\gamma||x - y||^2)
+$$
+
+> See [non_linear_svm.jl](non_linear_svm.jl) for a practical implementation of a SVM with a $\text{rbf}$ kernel trained on a non linearly separable dataset.
 
 ## What if the problem isn't binary?
 
@@ -104,3 +172,4 @@ In the case of _one-versus-all_ the prediction function has to be reformulated u
 1. All images taken from the well-written Wikipedia article on SVMs [https://en.wikipedia.org/wiki/Support_vector_machine](https://en.wikipedia.org/wiki/Support_vector_machine)
 2. **V. Vapnik**, _Statistical Learning Theory_ (1998)
 3. **O. Chapelle**, _Training a Support Vector Machine in the Primal_ (2007)
+4. **J. Platt**, _Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines_ (1998)
