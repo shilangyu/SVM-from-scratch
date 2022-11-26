@@ -24,9 +24,9 @@ end
 # to have a reproducible example
 seed!(0)
 
-# sample 100 data points from multivariate normal distributions with a visible separation between them
-points1 = [rand(MvNormal([10, 0], 1), 20) rand(MvNormal([0, 10], 1), 20)]
-points2 = [rand(MvNormal([10, 10], 1), 20) rand(MvNormal([0, 0], 1), 20)]
+# create two spirals which are not linearly seperable
+points1, points2 = two_spirals(500)
+points1, points2 = points1', points2'
 
 # visualize the dataset
 plt = scatter(points1[1, :], points1[2, :], label="y = 1")

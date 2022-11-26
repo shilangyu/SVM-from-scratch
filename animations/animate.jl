@@ -101,7 +101,7 @@ end
 # to have a reproducible example
 seed!(0)
 
-# sample 100 data points from multivariate normal distributions with a visible separation between them
+# create two spirals which are not linearly seperable
 points1, points2 = two_spirals(500)
 points1, points2 = points1', points2'
 
