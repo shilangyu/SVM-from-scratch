@@ -1,9 +1,15 @@
+module Models
+
 import LinearAlgebra: ⋅
 import Plots: plot
 using Plots
 
-# A proper SVM implementation
-mutable struct SVM{Scalar<:Real}
+export SVM, LinearSVM, fit!, plot
+
+abstract type AbstractSVM end
+
+# SVM with a kernel solving the dual formulation with SMO
+mutable struct SVM{Scalar<:Real} <: AbstractSVM
   const C::Scalar
   const kernel
 
@@ -27,7 +33,7 @@ end
 
 predict(svm::SVM, x) = x |> sign ∘ svm
 
-function plot(svm::SVM)
+function plot(svm::AbstractSVM)
   @assert size(svm.X, 1) == 2 "Plotting the decision boundary works only for 2-dimensional data"
 
   points1 = svm.X[:, svm.Y.==1]
@@ -108,6 +114,53 @@ function fit!(svm::SVM; alpha_tol=0.0001, error_tol=0.0001)
       end
     end
   end
+end
+
+# Linear kernel SVM solving the primal formulation (with hinge loss) using gradient descent
+# Scales better for a large amount of samples
+mutable struct LinearSVM{Scalar<:Real} <: AbstractSVM
+  const λ::Scalar
+
+  w::Vector{Scalar}
+  b::Scalar
+
+  # training examples in columns
+  const X::Matrix{Scalar}
+  # all -1 or 1
+  const Y::Vector{Int}
+
+  LinearSVM(X::Matrix{Scalar}, Y::Vector{Int}; λ::Scalar=one(Scalar)) where {Scalar<:Real} = begin
+    @assert size(X, 2) == size(Y, 1)
+    @assert all(y -> y == -1 || y == 1, Y)
+
+    new{Scalar}(λ, zeros(size(X, 1)), zero(Scalar), X, Y)
+  end
+end
+
+(self::LinearSVM)(x) = self.w ⋅ x - self.b
+
+predict(svm::LinearSVM, x) = x |> sign ∘ svm
+
+loss(svm::LinearSVM) = svm.λ * svm.w ⋅ svm.w + sum([max(0, 1 - y * svm(x)) for (x, y) in zip(eachcol(svm.X), svm.Y)]) / length(svm.Y)
+
+# train the model on the dataset. α represents the learning rate
+function fit!(svm::LinearSVM; α=0.003)
+  for (x, y) in zip(eachcol(svm.X), svm.Y)
+    is_correct = y * svm(x) >= 1
+
+    # different gradients have to be applied based on the condition
+    if is_correct
+      # adjust according to the gradients scaled by the learning rate
+      # gradients point to the steepest ascent, but we want to minimize the loss function, so we subtract the gradient
+      svm.w -= α * 2svm.λ * svm.w
+      svm.b -= α * 0
+    else
+      svm.w -= α * (2svm.λ * svm.w .- y * x)
+      svm.b -= α * y
+    end
+  end
+end
+
 end
 
 module KernelFunctions
