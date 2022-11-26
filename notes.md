@@ -1,6 +1,7 @@
 ---
 linkcolor: cyan
 geometry: margin=3.5cm
+title: Support Vector Machines
 ---
 
 # Support Vector Machines (SVM)
@@ -83,7 +84,7 @@ b_{k+1} = \begin{cases}
 \end{cases} \\
 $$
 
-> See [linear_soft_margin_svm.jl](linear_soft_margin_svm.jl) for a practical implementation of the so far introduced concepts
+> See [linear_soft_margin_svm.jl](https://github.com/shilangyu/SVM-from-scratch/blob/main/linear_soft_margin_svm.jl) for a practical implementation of the so far introduced concepts
 
 ## What if the problem is not linearly separable?
 
@@ -155,7 +156,7 @@ $$
 	\text{rbf}(x, y) = \exp(-\gamma||x - y||^2)
 $$
 
-> See [non_linear_svm.jl](non_linear_svm.jl) for a practical implementation of a SVM with a $\text{rbf}$ kernel trained on a non linearly separable dataset.
+> See [non_linear_svm.jl](https://github.com/shilangyu/SVM-from-scratch/blob/main/non_linear_svm.jl) for a practical implementation of a SVM with a $\text{rbf}$ kernel trained on a non linearly separable dataset.
 
 ## What if the problem isn't binary?
 
@@ -166,7 +167,7 @@ If the amount of classes is larger than 2, we can construct multiple SVM and tre
 
 In the case of _one-versus-all_ the prediction function has to be reformulated unlike in the _one-versus-one_ case. However, _one-versus-one_ comes with a $\binom{m}{2} = \mathcal O(m^2)$ quadratic amount of SVMs unlike the $m = \mathcal O(m)$ linear one for _one-versus-all_. Thus the _one-versus-one_ approach will scale horribly for larger values of $m$.
 
-> See [multiclass_svm.jl](multiclass_svm.jl) for a practical implementation of a multiclass SVM using the _one-versus-all_ approach.
+> See [multiclass_svm.jl](https://github.com/shilangyu/SVM-from-scratch/blob/main/multiclass_svm.jl) for a practical implementation of a multiclass SVM using the _one-versus-all_ approach.
 
 ## References
 
