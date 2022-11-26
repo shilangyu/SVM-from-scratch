@@ -4,7 +4,7 @@ import LinearAlgebra: ⋅
 import Plots: plot
 using Plots
 
-export SVM, LinearSVM, fit!, plot
+export SVM, LinearSVM, fit!, plot, predict
 
 abstract type AbstractSVM end
 
@@ -31,7 +31,7 @@ end
 
 (self::SVM)(x) = (self.α .* self.Y) ⋅ self.kernel.(eachcol(self.X), Ref(x)) + self.b
 
-predict(svm::SVM, x) = x |> sign ∘ svm
+predict(svm::AbstractSVM, x) = x |> sign ∘ svm
 
 function plot(svm::AbstractSVM)
   @assert size(svm.X, 1) == 2 "Plotting the decision boundary works only for 2-dimensional data"
@@ -138,8 +138,6 @@ mutable struct LinearSVM{Scalar<:Real} <: AbstractSVM
 end
 
 (self::LinearSVM)(x) = self.w ⋅ x - self.b
-
-predict(svm::LinearSVM, x) = x |> sign ∘ svm
 
 loss(svm::LinearSVM) = svm.λ * svm.w ⋅ svm.w + sum([max(0, 1 - y * svm(x)) for (x, y) in zip(eachcol(svm.X), svm.Y)]) / length(svm.Y)
 
