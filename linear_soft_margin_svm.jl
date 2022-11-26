@@ -35,7 +35,15 @@ hyperplane(x) = w' * x - b
 function draw()
   plt = scatter(points1[1, :], points1[2, :], label="y = 1")
   scatter!(plt, points2[1, :], points2[2, :], label="y = -1")
-  plot!(plt, x -> (-w[1] * x .+ b) / w[2], label="SVM prediction")
+
+  min_x = minimum(map((p) -> p[1][1], D))
+  min_y = minimum(map((p) -> p[1][2], D))
+  max_x = maximum(map((p) -> p[1][1], D))
+  max_y = maximum(map((p) -> p[1][2], D))
+  contour!(plt, min_x:0.1:max_x, min_y:0.1:max_y, (x, y) -> hyperplane([x, y]), levels=[-1], linestyles=:dash, colorbar_entry=false, color=:red)
+  contour!(plt, min_x:0.1:max_x, min_y:0.1:max_y, (x, y) -> hyperplane([x, y]), levels=[0], linestyles=:solid, label="SVM prediction", colorbar_entry=false, color=:green)
+  contour!(plt, min_x:0.1:max_x, min_y:0.1:max_y, (x, y) -> hyperplane([x, y]), levels=[1], linestyles=:dash, colorbar_entry=false, color=:blue)
+
   display(plt)
 end
 
