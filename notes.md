@@ -130,13 +130,16 @@ Subject to $\sum_{i=1}^n \alpha_i y_i = 0$ and $0 \le \alpha_i \le \lambda^{-1}$
 In the new space $w$ can be expressed as the following linear combination, for $c$ support vectors (ie. those with $\alpha_i > 0$):
 
 $$
-	w = \sum_{i=1}^c \alpha_i y_i \varphi(x_i)
+	w = \sum_{j=1}^c \alpha_j y_j \varphi(x_j)
 $$
 
 And $b$ can be computed from the support vectors as well:
 
 $$
-	b = \sum_{i=1}^c \alpha_i y_i \varphi(x_i) - y_i
+\begin{aligned}
+	b &= \frac{1}{n} \sum_{i=1}^n w\cdot\varphi(x_i) - y_i \\
+	  &= \frac{1}{n} \sum_{i=1}^n \sum_{j=1}^c \alpha_j y_j k(x_j, x_i) - y_i
+\end{aligned}
 $$
 
 Then we can return to our predictor function

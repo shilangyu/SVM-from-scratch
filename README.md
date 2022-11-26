@@ -5,3 +5,9 @@ Repo including explanation and high-level derivation of the SVM method used for 
 ## Linear soft margin SVM
 
 ![](animations/linear_soft_margin.gif)
+
+## Non linear RBF kernel SVM
+
+![](animations/non_linear.gif)
+
+> _training does not look continuous because the optimization method takes harsh steps which converge quickly_

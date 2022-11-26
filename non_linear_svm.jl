@@ -1,80 +1,3 @@
-module Linear
-
-import Random: shuffle, seed!
-using Distributions
-using Plots
-
-# to have a reproducible example
-seed!(0)
-
-# sample 40 data points from multivariate normal distributions with a visible separation between them
-points1 = rand(MvNormal([5, 8], 3 .* [1 3/5; 3/5 2]), 20)
-points2 = rand(MvNormal([8, 5], 3 .* [1 3/5; 3/5 2]), 20)
-
-# construct the dataset by labeling the data points and shuffling both classes
-D = shuffle([
-  tuple.(eachcol(points1), 1)
-  tuple.(eachcol(points2), -1)
-])
-
-# initialize trainable parameters: the normal vector and offset
-w = [0; 1]
-b = 0
-
-# dot product can be expressed as w⋅x = w^T * x
-hyperplane(x) = w' * x - b
-
-# for drawing current hyperplane
-function draw(anim)
-  plt = scatter(points1[1, :], points1[2, :], label="y = 1")
-  scatter!(plt, points2[1, :], points2[2, :], label="y = -1")
-
-  min_x = minimum(map((p) -> p[1][1], D))
-  min_y = minimum(map((p) -> p[1][2], D))
-  max_x = maximum(map((p) -> p[1][1], D))
-  max_y = maximum(map((p) -> p[1][2], D))
-  contour!(plt, min_x:0.1:max_x, min_y:0.1:max_y, (x, y) -> hyperplane([x, y]), levels=[-1], linestyles=:dash, colorbar_entry=false, color=:red)
-  contour!(plt, min_x:0.1:max_x, min_y:0.1:max_y, (x, y) -> hyperplane([x, y]), levels=[0], linestyles=:solid, label="SVM prediction", colorbar_entry=false, color=:green)
-  contour!(plt, min_x:0.1:max_x, min_y:0.1:max_y, (x, y) -> hyperplane([x, y]), levels=[1], linestyles=:dash, colorbar_entry=false, color=:blue)
-
-  frame(anim, plt)
-end
-
-
-# loss function and the regularization parameter
-λ = 3 / 100
-
-# train the model on the dataset. α represents the learning rate
-function fit(α=0.003)
-  for (x, y) in D
-    is_correct = y * hyperplane(x) >= 1
-
-    # different gradients have to be applied based on the condition
-    if is_correct
-      # adjust according to the gradients scaled by the learning rate
-      # gradients point to the steepest ascent, but we want to minimize the loss function, so we subtract the gradient
-      global w -= α * 2λ * w
-      global b -= α * 0
-    else
-      global w -= α * (2λ * w .- y * x)
-      global b -= α * y
-    end
-  end
-end
-
-
-anim = Animation()
-for n = 1:100
-  draw(anim)
-  fit(0.0001)
-end
-
-gif(anim, "linear_soft_margin.gif", fps=30)
-end
-
-
-module NonLinear
-
 import Random: shuffle, seed!
 using Distributions
 using Plots
@@ -102,32 +25,38 @@ end
 seed!(0)
 
 # sample 100 data points from multivariate normal distributions with a visible separation between them
-points1, points2 = two_spirals(500)
-points1, points2 = points1', points2'
+points1 = [rand(MvNormal([10, 0], 1), 20) rand(MvNormal([0, 10], 1), 20)]
+points2 = [rand(MvNormal([10, 10], 1), 20) rand(MvNormal([0, 0], 1), 20)]
+
+# visualize the dataset
+plt = scatter(points1[1, :], points1[2, :], label="y = 1")
+scatter!(plt, points2[1, :], points2[2, :], label="y = -1")
+display(plt)
+readline()
 
 # construct the dataset by labeling the data points and shuffling both classes
 D = shuffle([
   tuple.(eachcol(points1), 1)
   tuple.(eachcol(points2), -1)
 ])
+display(D)
 # for more efficient access
 X = [x for (x, y) in D]
 Y = [y for (x, y) in D]
+readline()
 
 # create a kernel function with its hyperparameter
 γ = 1 / 5
 k(x, y) = exp(-γ * (x - y)' * (x - y))
 
 # regularization parameter (essentially λ⁻¹)
-C = 1
+C = 1000
 # multipliers to be found using SMO
 α = zeros(length(D))
 b = 0
 
 # dot product replaced with the kernel function
 hyperplane(x) = (α .* Y) ⋅ k.(X, Ref(x)) + b
-
-anim = Animation()
 
 # for drawing current hyperplane
 function draw()
@@ -142,10 +71,12 @@ function draw()
   contour!(plt, min_x:0.5:max_x, min_y:0.5:max_y, (x, y) -> hyperplane([x, y]), levels=[0], linestyles=:solid, label="SVM prediction", colorbar_entry=false, color=:green)
   contour!(plt, min_x:0.5:max_x, min_y:0.5:max_y, (x, y) -> hyperplane([x, y]), levels=[1], linestyles=:dash, colorbar_entry=false, color=:blue)
 
-  frame(anim, plt)
+  display(plt)
 end
 
+# show initial hyperplane
 draw()
+readline()
 
 # uniform randint except `a`
 function randint_without(n, a)
@@ -155,12 +86,11 @@ function randint_without(n, a)
 end
 
 # performs one step of a simplified SMO
-function fit(alpha_tol=0.0001, error_tol=0.0001, lr=0.01)
+function fit(alpha_tol=0.0001, error_tol=0.0001)
   n = length(α)
 
   error(k) = hyperplane(X[k]) - Y[k]
   η(i, j) = 2 * k(X[i], X[j]) - k(X[i], X[i]) - k(X[j], X[j])
-
 
   LH(i, j) =
     if Y[i] == Y[j]
@@ -208,14 +138,13 @@ function fit(alpha_tol=0.0001, error_tol=0.0001, lr=0.01)
       else
         (b1 + b2) / 2
       end
-
-      draw()
     end
   end
 end
 
 
-fit()
-
-gif(anim, "non_linear.gif", fps=10)
+# train and show the decision boundary
+for _ in 1:100
+  fit()
 end
+draw()
