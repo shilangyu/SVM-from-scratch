@@ -725,12 +725,16 @@ as the following linear combination, for <span
 class="math inline">c</span> support vectors (ie. those with <span
 class="math inline">\alpha_i &gt; 0</span>):</p>
 <p><span class="math display">
-    w = \sum_{i=1}^c \alpha_i y_i \varphi(x_i)
+    w = \sum_{j=1}^c \alpha_j y_j \varphi(x_j)
 </span></p>
 <p>And <span class="math inline">b</span> can be computed from the
 support vectors as well:</p>
 <p><span class="math display">
-    b = \sum_{i=1}^c \alpha_i y_i \varphi(x_i) - y_i
+\begin{aligned}
+    b &amp;= \frac{1}{n} \sum_{i=1}^n w\cdot\varphi(x_i) - y_i \\
+      &amp;= \frac{1}{n} \sum_{i=1}^n \sum_{j=1}^c \alpha_j y_j k(x_j,
+x_i) - y_i
+\end{aligned}
 </span></p>
 <p>Then we can return to our predictor function</p>
 <p><span class="math display">
