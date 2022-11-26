@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Support Vector Machines</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: cyan;
+    }
+    a:visited {
+      color: cyan;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <style>
+    html {
+      font-size: 100%;
+      overflow-y: scroll;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+    body {
+      color: #444;
+      font-family: Georgia, Palatino, "Palatino Linotype", Times,
+        "Times New Roman", serif;
+      font-size: 12px;
+      line-height: 1.7;
+      padding: 1em;
+      margin: auto;
+      max-width: 42em;
+      background: #fefefe;
+    }
+    a {
+      color: #0645ad;
+      text-decoration: none;
+    }
+    a:visited {
+      color: #0b0080;
+    }
+    a:hover {
+      color: #06e;
+    }
+    a:active {
+      color: #faa700;
+    }
+    a:focus {
+      outline: thin dotted;
+    }
+    ::-moz-selection {
+      background: rgba(255, 255, 0, 0.3);
+      color: #000;
+    }
+    ::selection {
+      background: rgba(255, 255, 0, 0.3);
+      color: #000;
+    }
+    a::-moz-selection {
+      background: rgba(255, 255, 0, 0.3);
+      color: #0645ad;
+    }
+    a::selection {
+      background: rgba(255, 255, 0, 0.3);
+      color: #0645ad;
+    }
+    p {
+      margin: 1em 0;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: #111;
+      line-height: 125%;
+      margin-top: 2em;
+      font-weight: 400;
+    }
+    h4,
+    h5,
+    h6 {
+      font-weight: 700;
+    }
+    h1 {
+      font-size: 2.5em;
+    }
+    h2 {
+      font-size: 2em;
+    }
+    h3 {
+      font-size: 1.5em;
+    }
+    h4 {
+      font-size: 1.2em;
+    }
+    h5 {
+      font-size: 1em;
+    }
+    h6 {
+      font-size: 0.9em;
+    }
+    blockquote {
+      color: #666;
+      margin: 0;
+      padding-left: 3em;
+      border-left: 0.5em #eee solid;
+    }
+    hr {
+      display: block;
+      height: 2px;
+      border: 0;
+      border-top: 1px solid #aaa;
+      border-bottom: 1px solid #eee;
+      margin: 1em 0;
+      padding: 0;
+    }
+    code,
+    kbd,
+    pre,
+    samp {
+      color: #000;
+      font-family: monospace, monospace;
+      font-size: 0.98em;
+    }
+    pre {
+      white-space: pre;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    b,
+    strong {
+      font-weight: 700;
+    }
+    dfn {
+      font-style: italic;
+    }
+    ins {
+      background: #ff9;
+      color: #000;
+      text-decoration: none;
+    }
+    mark {
+      background: #ff0;
+      color: #000;
+      font-style: italic;
+      font-weight: 700;
+    }
+    sub,
+    sup {
+      font-size: 75%;
+      line-height: 0;
+      position: relative;
+      vertical-align: baseline;
+    }
+    sup {
+      top: -0.5em;
+    }
+    sub {
+      bottom: -0.25em;
+    }
+    ol,
+    ul {
+      margin: 1em 0;
+      padding: 0 0 0 2em;
+    }
+    li p:last-child {
+      margin-bottom: 0;
+    }
+    ol ol,
+    ul ul {
+      margin: 0.3em 0;
+    }
+    dl {
+      margin-bottom: 1em;
+    }
+    dt {
+      font-weight: 700;
+      margin-bottom: 0.8em;
+    }
+    dd {
+      margin: 0 0 0.8em 2em;
+    }
+    dd:last-child {
+      margin-bottom: 0;
+    }
+    img {
+      border: 0;
+      -ms-interpolation-mode: bicubic;
+      vertical-align: middle;
+    }
+    figure {
+      display: block;
+      text-align: center;
+      margin: 1em 0;
+    }
+    figure img {
+      border: none;
+      margin: 0 auto;
+    }
+    figcaption {
+      font-size: 0.8em;
+      font-style: italic;
+      margin: 0 0 0.8em;
+    }
+    table {
+      margin-bottom: 2em;
+      border-bottom: 1px solid #ddd;
+      border-right: 1px solid #ddd;
+      border-spacing: 0;
+      border-collapse: collapse;
+    }
+    table th {
+      padding: 0.2em 1em;
+      background-color: #eee;
+      border-top: 1px solid #ddd;
+      border-left: 1px solid #ddd;
+    }
+    table td {
+      padding: 0.2em 1em;
+      border-top: 1px solid #ddd;
+      border-left: 1px solid #ddd;
+      vertical-align: top;
+    }
+    .author {
+      font-size: 1.2em;
+      text-align: center;
+    }
+    @media only screen and (min-width: 480px) {
+      body {
+        font-size: 14px;
+      }
+    }
+    @media only screen and (min-width: 768px) {
+      body {
+        font-size: 16px;
+      }
+    }
+    @media print {
+      * {
+        background: 0 0 !important;
+        color: #000 !important;
+        filter: none !important;
+        -ms-filter: none !important;
+      }
+      body {
+        font-size: 12pt;
+        max-width: 100%;
+      }
+      a,
+      a:visited {
+        text-decoration: underline;
+      }
+      hr {
+        height: 1px;
+        border: 0;
+        border-bottom: 1px solid #000;
+      }
+      a[href]:after {
+        content: " (" attr(href) ")";
+      }
+      abbr[title]:after {
+        content: " (" attr(title) ")";
+      }
+      .ir a:after,
+      a[href^="#"]:after,
+      a[href^="javascript:"]:after {
+        content: "";
+      }
+      blockquote,
+      pre {
+        border: 1px solid #999;
+        padding-right: 1em;
+        page-break-inside: avoid;
+      }
+      img,
+      tr {
+        page-break-inside: avoid;
+      }
+      img {
+        max-width: 100% !important;
+      }
+      @page :left {
+        margin: 15mm 20mm 15mm 10mm;
+      }
+      @page :right {
+        margin: 15mm 10mm 15mm 20mm;
+      }
+      h2,
+      h3,
+      p {
+        orphans: 3;
+        widows: 3;
+      }
+      h2,
+      h3 {
+        page-break-after: avoid;
+      }
+    }
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Support Vector Machines</h1>
+</header>
+<h1 data-number="1" id="support-vector-machines-svm"><span
+class="header-section-number">1</span> Support Vector Machines
+(SVM)</h1>
+<blockquote>
+<p>Disclaimer: this does not aim to fully cover the possibilities of SVM
+models. It merely describes the basic concepts related to them. Some
+details are skipped on purpose with the intention of keeping it
+short.</p>
+</blockquote>
+<p>Invented by Vladimir Vapnik. SVM is a binary linear classifier for
+supervised learning (though, can be used for regression as well). Input
+data are points in Euclidean space.</p>
+<p>Let <span class="math inline">D = \{(x_i, y_i) : i \in \{1, \cdots,
+n\}\}</span> be a dataset which is a set of pairs where <span
+class="math inline">x_i \in \mathbb R^d</span> is a <em>data point</em>
+in some <span class="math inline">d</span>-dimensional space and <span
+class="math inline">y_i \in \{-1, 1\}</span> is a <em>label</em> of the
+appropriate <span class="math inline">x_i</span> data point classifying
+it to one of the two classes. The model is trained on <span
+class="math inline">D</span> after which it is present with <span
+class="math inline">x_{i+1}</span> and is asked to predict the label of
+this previously unseen data point.</p>
+<p>The prediction function will be denoted by <span
+class="math inline">p: \mathbb R^d \to \{-1, 1\}</span>. The output of a
+prediction will be denoted by <span class="math inline">\hat y</span>.
+SVM is a description of such a model and how can one optimize <span
+class="math inline">p</span> given a dataset and a loss function.</p>
+<p>SVM’s goal is to construct a prediction function which will represent
+a hyperplane that can be used to divide the space into two parts. One
+SVM model is considered to be better than a different SVM model for the
+same dataset if the margin (distance) between the hyperplane and the
+nearest data point is maximized. The nearest data point to the
+hyperplane is called the <em>support vector</em>. Therefore we have a
+clear metric to optimize.</p>
+<figure>
+<img
+src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Svm_separating_hyperplanes_(SVG).svg/1920px-Svm_separating_hyperplanes_(SVG).svg.png"
+alt="A dataset with black and white dots representing two different labels. Three hyperplanes divide the dataset in different ways." />
+<figcaption aria-hidden="true">A dataset with black and white dots
+representing two different labels. Three hyperplanes divide the dataset
+in different ways.</figcaption>
+</figure>
+<p>Recall the general equation of a hyperplane: <span
+class="math inline">w \cdot x - b = 0</span> where <span
+class="math inline">w \in \mathbb R^d</span> denotes a normal vector to
+the hyperplane and <span class="math inline">b \in \mathbb R</span> is
+the offset (<span class="math inline">\frac{b}{||w||}</span> determines
+the offset from the origin along the normal vector <span
+class="math inline">w</span>). Since our goal is the find the optimal
+hyperplane, we end up with <span class="math inline">d+1</span>
+trainable parameters (<span class="math inline">|w| + 1</span>). Once
+the hyperplane is found we can construct two additional parallel
+hyperplanes which reside at the support vectors of the two classes,
+<span class="math inline">w \cdot x - b = -1</span> and <span
+class="math inline">w \cdot x - b = 1</span>. Then, all points from the
+dataset adhere to the following</p>
+<p><span class="math display">
+y_i = \begin{cases}
+    -1 &amp; \text{if } w \cdot x_i - b \le -1 \\
+    1 &amp; \text{if } w \cdot x_i - b \ge 1 \\
+\end{cases} \implies y_i(w \cdot x - b) \ge 1
+</span></p>
+<figure>
+<img
+src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/SVM_margin.png/1920px-SVM_margin.png"
+alt="A dataset separated by a hyperplane normalized around the support vectors." />
+<figcaption aria-hidden="true">A dataset separated by a hyperplane
+normalized around the support vectors.</figcaption>
+</figure>
+<p>Since <span class="math inline">\frac{1}{||w||}</span> is the margin
+and we want to maximize it, the problem can be restated as a
+minimization problem of <span class="math inline">||w||</span>. Our
+predictor can be neatly expressed as <span class="math inline">p(x) =
+\text{sign}(w \cdot x - b)</span> with an edge case of when <span
+class="math inline">x</span> lies perfectly on the hyperplane, then we
+can just assume that <span class="math inline">p(x) = 0</span> belongs
+to one of the two classes. This is called a <em>hard-margin SVM</em>
+since it works only for perfect datasets which do not have outliers.</p>
+<p>Now that we have the model we need to introduce a way to train it.
+There are many techniques to do so. Here we will focus on one which uses
+gradient descent. Firstly, we need some function we want to optimize. We
+will use the hinge function which will suit our needs well: <span
+class="math inline">H(x_i, y_i) = \max(0, 1 - y_i(w \cdot x_i -
+b))</span>. Notice, that when the guess is correct, then <span
+class="math inline">y_i(w \cdot x_i - b) \ge 1</span> as shown before,
+thus <span class="math inline">H = 0</span>. If the guess is incorrect,
+<span class="math inline">H \ge 0</span>. So if for every data point
+<span class="math inline">H = 0</span> then we have found a hyperplane
+that divides the space correctly. Hinge loss introduces a
+<em>soft-margin</em> since it allows for misclassification with a
+quantifiable result. We also have to incorporate the minimization of
+<span class="math inline">||w||</span> as previously stated. Finally, we
+can define a loss function over the whole dataset which we will want to
+minimize:</p>
+<p><span class="math display">
+\begin{aligned}
+    \ell(w, b) &amp;= \lambda ||w||^2 + \frac{1}{n}\sum_{i=1}^n H(x_i,
+y_i) \\
+                         &amp;= \lambda w \cdot w +
+\frac{1}{n}\sum_{i=1}^n \max(0, 1 - y_i(w \cdot x_i - b))
+\end{aligned}
+</span></p>
+<p>Here <span class="math inline">\lambda &gt; 0</span> is the
+regularization hyperparameter controlling the trade-off between correct
+predictions and large margins. To perform gradient descent we will need
+to compute the partial derivatives with respect to the trainable
+parameters (<span class="math inline">w</span> and <span
+class="math inline">b</span>). Sadly the hinge function is not
+differentiable, but we can consider it by splitting it into two cases:
+when we reach the left and right case of the <span
+class="math inline">\max</span> function.</p>
+<p><span class="math display">
+H(x_i, y_i) = \begin{cases}
+    0 &amp; \text{if } y_i(w \cdot x_i - b) \ge 1 \\
+    1 - y_i(w \cdot x_i - b) &amp; \text{otherwise} \\
+\end{cases}
+</span></p>
+<p>Which yields the following gradient (recall that <span
+class="math inline">w</span> is a vector):</p>
+<p><span class="math display">
+\nabla\ell = \begin{bmatrix}
+    \frac{\partial \ell}{\partial w} \\
+    \\
+    \frac{\partial \ell}{\partial b} \\
+\end{bmatrix} = \begin{bmatrix}
+    2\lambda w + \frac{1}{n}\sum_{i = 0}^n \begin{cases}
+        0 &amp; \text{if } y_i(w \cdot x_i - b) \ge 1 \\
+        -y_i x_i &amp; \text{otherwise} \\
+    \end{cases} \\
+    \frac{1}{n}\sum_{i = 0}^n \begin{cases}
+        0 &amp; \text{if } y_i(w \cdot x_i - b) \ge 1 \\
+        y_i &amp; \text{otherwise} \\
+    \end{cases} \\
+\end{bmatrix} = \mathbf 0
+</span></p>
+<p>For each training example from our dataset we can now first check the
+<span class="math inline">y_i(w \cdot x_i - b) \ge 1</span> condition.
+We can perform gradient descent with the gradient specified above and
+conditionally apply a different gradient based on the condition. Since
+the gradient points to the steepest ascent and our task is to minimize
+the function, we will subtract the gradient instead of adding it. Our
+parameters will now converge iteratively, where <span
+class="math inline">k</span> is the iteration number for each <span
+class="math inline">i</span>:</p>
+<p><span class="math display">
+w_{k+1} = \begin{cases}
+    w_k - 2\lambda w_k &amp;\text{if } y_i(w_k \cdot x_i - b) \ge 1 \\
+    w_k - (2\lambda w_k - y_i x_i) = w_k - 2\lambda w_k + y_i x_i
+&amp;\text{otherwise} \\
+\end{cases} \\
+</span></p>
+<p><span class="math display">
+b_{k+1} = \begin{cases}
+    b_k &amp;\text{if } y_i(w \cdot x_i - b_k) \ge 1 \\
+    b_k - y_i &amp;\text{otherwise} \\
+\end{cases} \\
+</span></p>
+<blockquote>
+<p>See <a
+href="https://github.com/shilangyu/SVM-from-scratch/blob/main/linear_soft_margin_svm.jl">linear_soft_margin_svm.jl</a>
+for a practical implementation of the so far introduced concepts</p>
+</blockquote>
+<h2 data-number="1.1"
+id="what-if-the-problem-is-not-linearly-separable"><span
+class="header-section-number">1.1</span> What if the problem is not
+linearly separable?</h2>
+<p>So far we have been generating hyperplanes which intrinsically suffer
+from being able to classify only linearly separable datasets. For
+instance, the XOR function is not linearly separable. To solve
+non-linear problems one has to introduce non-linearity to the model,
+similarly to how neural networks use non-linear activation functions.
+One such way would be to introduce extra dimensions where the dataset
+can be divided by a hyperplane. If <span class="math inline">\mathbb
+R^d</span> is the space of the data points, we want to find such a
+mapping, called feature map, <span class="math inline">\varphi: \mathbb
+R^d \to \mathbb R^r</span> for some <span class="math inline">r \in
+\mathbb N</span> (preferably <span class="math inline">d &lt; r</span>
+since we want to increase the dimensionality) together with a <em>kernel
+function</em> <span class="math inline">k: \mathbb R^d \times \mathbb
+R^d \to \mathbb R</span></p>
+<p><span class="math display">
+    k(x, y) = \langle \varphi(x), \varphi(y) \rangle
+</span></p>
+<p>Since we are operating in the euclidean space with the dot product as
+the inner product space, we can rewrite <span
+class="math inline">k</span> as <span class="math inline">k(x,y) =
+\varphi(x) \cdot \varphi(y)</span>. Direct computation of <span
+class="math inline">\varphi</span> is not needed, we will only need to
+find the kernel function. This kernel function will replace dot products
+used throughout the SVM method.</p>
+<figure>
+<img
+src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Kernel_trick_idea.svg/440px-Kernel_trick_idea.svg.png"
+alt="A non-linearly separable dataset mapped to a higher dimensional space where a decision boundary can be found with a simple hyperplane using \varphi(X) = (x_1, x_2, x_1^2 + x_2^2)." />
+<figcaption aria-hidden="true">A non-linearly separable dataset mapped
+to a higher dimensional space where a decision boundary can be found
+with a simple hyperplane using <span class="math inline">\varphi(X) =
+(x_1, x_2, x_1^2 + x_2^2)</span>.</figcaption>
+</figure>
+<p>Note that if we set <span class="math inline">\varphi =
+\text{id}</span> then <span class="math inline">k(x, y) = \langle
+\varphi(x), \varphi(y) \rangle = \langle x, y \rangle = x \cdot
+y</span>, which gives us the SVM for linearly separable problems. Now,
+this problem can be expressed as a primal one and proceed with gradient
+descent as we did for the linear case. However, for some not precisely
+known reason the literature about SVMs has converged towards solving it
+as a Lagrangian dual and, as O. Chapelle (2007) argues, the primal one
+can provide many advantages. In both the primal and dual problem
+formulation <span class="math inline">\varphi</span> is never directly
+computed, it is always used indirectly through the kernel function. So,
+to not diverge from literature I will present the dual problem which
+requires Quadratic Optimization instead of gradient descent.</p>
+<p>To start we introduce the Lagrange primal which we want to minimize
+on <span class="math inline">w</span> and <span
+class="math inline">b</span></p>
+<p><span class="math display">
+\mathcal L_1(w, b, \alpha) = \lambda\frac{1}{2}||w||^2 - \sum_{i=1}^n
+\alpha_i (y_i(w^T\varphi(x_i) - b) - 1)
+</span></p>
+<p>subject to <span class="math inline">\alpha_i \ge 0</span>. This is
+not enough since we want to get rid of the <span
+class="math inline">\varphi</span>. Thus we attempt to minimize on <span
+class="math inline">w</span> and <span class="math inline">b</span> to
+derive the dual:</p>
+<p><span class="math display">
+    \frac{\partial \mathcal L_1}{\partial w} = 0 = \lambda w -
+\sum_{i=1}^n \alpha_i y_i \varphi(x_i) \implies w = \sum_{i=1}^n
+\alpha_i y_i \varphi(x_i)
+</span></p>
+<p><span class="math display">
+    \frac{\partial \mathcal L_1}{\partial b} = 0 = -\sum_{i=1}^n
+\alpha_i y_i \implies \sum_{i=1}^n \alpha_i y_i = 0
+</span></p>
+<p>Which yields the dual which has to be minimized as</p>
+<p><span class="math display">
+\begin{aligned}
+    \mathcal L_2(\alpha) &amp;= \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n y_i
+\alpha_i \varphi(x_i) \cdot \varphi(x_j) y_j \alpha_j - \sum_{i=1}^n
+\alpha_i \\
+     &amp;= \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^n y_i \alpha_i k(x_i, x_j)
+y_j \alpha_j - \sum_{i=1}^n \alpha_i \\
+\end{aligned}
+</span></p>
+<p>Subject to <span class="math inline">\sum_{i=1}^n \alpha_i y_i =
+0</span> and <span class="math inline">0 \le \alpha_i \le
+\lambda^{-1}</span>. To solve this one has to use quadratic optimization
+which is well beyond the scope of this document. A popular approach is
+the SMO algorithm (J. Platt 1998).</p>
+<p>In the new space <span class="math inline">w</span> can be expressed
+as the following linear combination, for <span
+class="math inline">c</span> support vectors (ie. those with <span
+class="math inline">\alpha_i &gt; 0</span>):</p>
+<p><span class="math display">
+    w = \sum_{i=1}^c \alpha_i y_i \varphi(x_i)
+</span></p>
+<p>And <span class="math inline">b</span> can be computed from the
+support vectors as well:</p>
+<p><span class="math display">
+    b = \sum_{i=1}^c \alpha_i y_i \varphi(x_i) - y_i
+</span></p>
+<p>Then we can return to our predictor function</p>
+<p><span class="math display">
+\begin{aligned}
+    p(x) &amp;= \text{sign}(w \cdot \varphi(x) - b) \\
+             &amp;= \text{sign}(\sum_{i=1}^c \alpha_i y_i \varphi(x_i)
+\cdot \varphi(x) - b) \\
+             &amp;= \text{sign}(\sum_{i=1}^c \alpha_i y_i \langle
+\varphi(x_i), \varphi(x) \rangle - b) \\
+             &amp;= \text{sign}(\sum_{i=1}^c \alpha_i y_i k(x_i, x) - b)
+\\
+\end{aligned}
+</span></p>
+<p>Many kernel function exist and can be used for different use cases. A
+common choice for a kernel function is the basis radial function, it has
+a single hyperparameter <span class="math inline">\gamma &gt;
+0</span>:</p>
+<p><span class="math display">
+    \text{rbf}(x, y) = \exp(-\gamma||x - y||^2)
+</span></p>
+<blockquote>
+<p>See <a
+href="https://github.com/shilangyu/SVM-from-scratch/blob/main/non_linear_svm.jl">non_linear_svm.jl</a>
+for a practical implementation of a SVM with a <span
+class="math inline">\text{rbf}</span> kernel trained on a non linearly
+separable dataset.</p>
+</blockquote>
+<h2 data-number="1.2" id="what-if-the-problem-isnt-binary"><span
+class="header-section-number">1.2</span> What if the problem isn’t
+binary?</h2>
+<p>If the amount of classes is larger than 2, we can construct multiple
+SVM and treat them as a single larger SVM. There are many popular
+techniques for that, but here two most popular approaches will be
+mentioned. Let there be <span class="math inline">m</span> classes.</p>
+<ol type="1">
+<li><em>one-versus-all</em>: we construct <span
+class="math inline">m</span> SVMs trained to treat the dataset as having
+two classes: one for the target class, and the other for all other <span
+class="math inline">m-1</span> classes. To then perform predictions, we
+can run the new <span class="math inline">x_{i+1}</span> point through
+all <span class="math inline">m</span> SVMs and see which one is the
+most certain about its prediction. Note, that the definition of the
+prediction function had a co-domain of <span class="math inline">\{-1,
+0, 1\}</span> so it is not possible to decide which SVM is the most
+certain. Therefore the prediction function has to be altered to produce
+quantifiable scores.</li>
+<li><em>one-versus-one</em>: we construct <span
+class="math inline">\binom{m}{2}</span> SVMs for every combination of
+pairs of classes. Then to perform predictions, we run all SVMs and
+collect votes. The class with most votes wins.</li>
+</ol>
+<p>In the case of <em>one-versus-all</em> the prediction function has to
+be reformulated unlike in the <em>one-versus-one</em> case. However,
+<em>one-versus-one</em> comes with a <span
+class="math inline">\binom{m}{2} = \mathcal O(m^2)</span> quadratic
+amount of SVMs unlike the <span class="math inline">m = \mathcal
+O(m)</span> linear one for <em>one-versus-all</em>. Thus the
+<em>one-versus-one</em> approach will scale horribly for larger values
+of <span class="math inline">m</span>.</p>
+<blockquote>
+<p>See <a
+href="https://github.com/shilangyu/SVM-from-scratch/blob/main/multiclass_svm.jl">multiclass_svm.jl</a>
+for a practical implementation of a multiclass SVM using the
+<em>one-versus-all</em> approach.</p>
+</blockquote>
+<h2 data-number="1.3" id="references"><span
+class="header-section-number">1.3</span> References</h2>
+<ol type="1">
+<li>All images taken from the well-written Wikipedia article on SVMs <a
+href="https://en.wikipedia.org/wiki/Support_vector_machine">https://en.wikipedia.org/wiki/Support_vector_machine</a></li>
+<li><strong>V. Vapnik</strong>, <em>Statistical Learning Theory</em>
+(1998)</li>
+<li><strong>O. Chapelle</strong>, <em>Training a Support Vector Machine
+in the Primal</em> (2007)</li>
+<li><strong>J. Platt</strong>, <em>Sequential Minimal Optimization: A
+Fast Algorithm for Training Support Vector Machines</em> (1998)</li>
+</ol>
+</body>
+</html>
